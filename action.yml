@@ -31,8 +31,8 @@ runs:
       uses: tailscale/github-action@v3
       id: setup-tailscale
       with:
-        oauth_client_id: ${{ inputs['tailscale-oauth-client-id'] }}
-        oauth_client_secret: ${{ inputs['tailscale-oauth-client-secret'] }}
+        oauth-client-id: ${{ inputs['tailscale-oauth-client-id'] }}
+        oauth-client-secret: ${{ inputs['tailscale-oauth-client-secret'] }}
         hostname: "github-action-runner"
         tags: tag:ci
         use-cache: true
