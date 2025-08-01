@@ -34,6 +34,7 @@ runs:
         oauth_client_id: ${{ inputs['tailscale-oauth-client-id'] }}
         oauth_client_secret: ${{ inputs['tailscale-oauth-client-secret'] }}
         hostname: "github-action-runner"
+        tags: tag:ci
         use-cache: true
     - name: Setup SSHD
       shell: bash

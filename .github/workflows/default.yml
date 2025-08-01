@@ -16,7 +16,6 @@ jobs:
           ssh-password: ${{ secrets.SSH_PASSWORD }}
           tailscale-oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           tailscale-oauth-client-secret: ${{ secrets.TS_OAUTH_SECRET }}
-          tags: tag:ci
 
       - name: check for tailscale connection
         shell: bash
