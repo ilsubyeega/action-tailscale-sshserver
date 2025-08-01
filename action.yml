@@ -1,0 +1,65 @@
+name: "Tailscale with SSH Server"
+author: "ilsubyeega <git@fmt.kr>"
+description: "Open SSH server in runner and connect to Tailscale"
+branding:
+  icon: "upload-cloud"
+  color: "blue"
+inputs:
+  ssh-password:
+    description: "The password used to SSH to the runner."
+    required: true
+  tailscale-oauth-client-id:
+    description: "The OAuth client ID for Tailscale."
+    required: true
+  tailscale-oauth-client-secret:
+    description: "The OAuth client secret for Tailscale."
+    required: true
+  max-life-time:
+    description: "The maximum lifetime of the SSH session in seconds."
+    required: false
+    default: "3600" # 1 hour
+runs:
+  using: "composite"
+  steps:
+    - name: Install OpenSSH
+      shell: bash
+      id: install-openssh
+      run: |
+        sudo apt update -qqqy
+        sudo apt install -qqqy openssh-server tmux
+    - name: Setup Tailscale
+      uses: tailscale/github-action@v3
+      id: setup-tailscale
+      with:
+        oauth_client_id: ${{ inputs['tailscale-oauth-client-id'] }}
+        oauth_client_secret: ${{ inputs['tailscale-oauth-client-secret'] }}
+        hostname: "github-action-runner"
+        use-cache: true
+    - name: Setup SSHD
+      shell: bash
+      id: setup-sshd
+      run: |
+        sudo systemctl enable ssh
+        sudo ufw disable
+        if [ -z "$(find /etc/ssh/ -name "ssh_host_*"|xargs echo -n)" ]; then DEBIAN_FRONTEND=noninteractive sudo -E dpkg-reconfigure openssh-server ;  fi
+        echo "PasswordAuthentication yes" | sudo tee -a /etc/ssh/sshd_config
+        echo "PermitRootLogin yes" | sudo tee -a /etc/ssh/sshd_config
+        sudo systemctl daemon-reload
+        sudo systemctl restart ssh --now
+    - name: Setup SSH password
+      shell: bash
+      id: setup-ssh-password
+      env:
+        SSH_PASSWORD: ${{ inputs['ssh-password'] }}
+      run: |
+        echo "root:${SSH_PASSWORD}" | sudo chpasswd
+        sudo systemctl restart ssh --now
+    - name: Poll until manual SSH stop.
+      shell: bash
+      id: reverse-ssh
+      env:
+        MAX_LIFE_TIME: ${{ inputs.max-life-time }}
+      run: |
+        echo "Finished setup, you can now SSH to the runner."
+        whoami
+        sleep ${MAX_LIFE_TIME}
